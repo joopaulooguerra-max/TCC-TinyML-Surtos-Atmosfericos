@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+.env
+
+# Dados e artefatos gerados (versione apenas se houver motivo e tamanho adequado)
+dados/*.npz
+dados/*.npy
+dados/*.csv
+modelos/*.pkl
+modelos/*.joblib
+modelos/*.tflite
+modelos/*.h5
+modelos/*.keras
+*.mat
+*.png
+*.pdf
+
+# Sistemas operacionais / IDEs
+.DS_Store
+Thumbs.db
+.vscode/
