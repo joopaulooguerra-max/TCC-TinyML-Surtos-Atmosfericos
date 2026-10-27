@@ -214,7 +214,7 @@ python modelo/tcc_pipeline_3classes_v2.py
 
 **João Paulo Guerra**  
 Curso de Engenharia — TCC 2026  
-Orientador: Prof(a). Ana Maria Moreira Maciel
+Orientador: Prof(a). João Ferreira
 
 ---
 
