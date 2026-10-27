@@ -1,11 +1,11 @@
-# 🔬 TCC — Sistema Embarcado com TinyML para Classificação de Surtos Atmosféricos
+#  TCC — Sistema Embarcado com TinyML para Classificação de Surtos Atmosféricos
 
 > **Trabalho de Conclusão de Curso — Engenharia**  
 > Tema: *Sistema Embarcado Baseado em TinyML para Classificação de Sinais de Surtos Atmosféricos em Redes de Distribuição Elétrica*
 
 ---
 
-## 📋 Sobre o projeto
+##  Sobre o projeto
 
 Este trabalho propõe o desenvolvimento de um sistema embarcado de aprendizado de máquina capaz de **classificar sinais elétricos** em redes de distribuição de média tensão (13,8 kV), distinguindo automaticamente entre operação normal e dois níveis de severidade de surto atmosférico.
 
@@ -17,7 +17,7 @@ O Brasil possui uma das maiores incidências de raios do mundo, com cerca de **7
 
 ---
 
-## 🗂️ Estrutura do repositório
+##  Estrutura do repositório
 
 ```
 TCC-TinyML-Surtos-Atmosfericos/
@@ -41,7 +41,7 @@ TCC-TinyML-Surtos-Atmosfericos/
 
 ---
 
-## ⚡ As 3 classes do classificador
+##  As 3 classes do classificador
 
 | Classe | Nome | Descrição | Amplitude do pico |
 |:------:|------|-----------|:-----------------:|
@@ -51,7 +51,7 @@ TCC-TinyML-Surtos-Atmosfericos/
 
 ---
 
-## 🔁 Pipeline do projeto
+##  Pipeline do projeto
 
 ```
 Simulação RLC          Data Augmentation       Extração de Features
@@ -68,7 +68,7 @@ Simulação RLC          Data Augmentation       Extração de Features
 
 ---
 
-## 📐 Base de dados
+##  Base de dados
 
 Os dados são **sintéticos**, gerados por equações físicas fundamentadas em normas e literatura técnica. Cada sinal é composto por três componentes somados:
 
@@ -105,7 +105,7 @@ v(t) = Vp × (e^(-α·t) − e^(-β·t))
 
 ---
 
-## 🧠 Características extraídas (features)
+##  Características extraídas (features)
 
 Cada sinal de 2001 amostras é resumido em **8 números** que descrevem seu comportamento nos domínios do tempo e da frequência:
 
@@ -124,7 +124,7 @@ Cada sinal de 2001 amostras é resumido em **8 números** que descrevem seu comp
 
 ---
 
-## 📊 Resultados
+##  Resultados
 
 ### Relatório de classificação
 
@@ -163,7 +163,7 @@ Cada sinal de 2001 amostras é resumido em **8 números** que descrevem seu comp
 
 ---
 
-## 🚀 Como executar
+##  Como executar
 
 ### Pré-requisitos
 - Google Colab ou Python 3.10+
@@ -184,7 +184,7 @@ python modelo/tcc_pipeline_3classes_v2.py
 
 ---
 
-## 🔧 Tecnologias utilizadas
+##  Tecnologias utilizadas
 
 | Tecnologia | Uso |
 |------------|-----|
@@ -197,7 +197,7 @@ python modelo/tcc_pipeline_3classes_v2.py
 
 ---
 
-## 📚 Referências técnicas
+##  Referências técnicas
 
 - **IEC 60060-1** — High-voltage test techniques: General definitions and test requirements
 - **IEC 60060-2** — High-voltage test techniques: Measuring systems
@@ -210,7 +210,7 @@ python modelo/tcc_pipeline_3classes_v2.py
 
 ---
 
-## 👨‍💻 Autor
+##  Autor
 
 **João Paulo Guerra**  
 Curso de Engenharia — TCC 2026  
@@ -218,7 +218,7 @@ Orientador: Prof(a). Ana Maria Moreira Maciel
 
 ---
 
-## ⚠️ Observações importantes
+##  Observações importantes
 
 - Os dados utilizados são **sintéticos**, gerados por equações físicas fundamentadas em normas técnicas internacionais. Não representam medições reais de campo em redes elétricas.
 - Os resultados de 98% de acurácia foram obtidos em dados sintéticos de teste. O desempenho em sinais reais de campo pode diferir e constitui trabalho futuro.
