@@ -1,225 +1,83 @@
-#  TCC — Sistema Embarcado com TinyML para Classificação de Surtos Atmosféricos
+# TCC — Classificação de Surtos Atmosféricos com TinyML
 
-> **Trabalho de Conclusão de Curso — Engenharia**  
-> Tema: *Sistema Embarcado Baseado em TinyML para Classificação de Sinais de Surtos Atmosféricos em Redes de Distribuição Elétrica*
+**Tema:** Sistema Embarcado Baseado em TinyML para Classificação de Sinais de Surtos Atmosféricos em Redes de Distribuição Elétrica
 
----
+**Autor:** [SEU NOME] · **Orientador:** [NOME DO ORIENTADOR]
 
-##  Sobre o projeto
+> **Escopo:** estudo de viabilidade feito **inteiramente em simulação**. Os dados são sintéticos e não há validação com medições reais nem em hardware.
 
-Este trabalho propõe o desenvolvimento de um sistema embarcado de aprendizado de máquina capaz de **classificar sinais elétricos** em redes de distribuição de média tensão (13,8 kV), distinguindo automaticamente entre operação normal e dois níveis de severidade de surto atmosférico.
+## O que o projeto faz
 
-O modelo de classificação é treinado em ambiente Python (Google Colab) e exportado para o formato **TensorFlow Lite (INT8)**, viabilizando sua execução diretamente no microcontrolador **ESP32-S3** sem dependência de conectividade externa — paradigma conhecido como **TinyML**.
+Classifica uma janela de sinal de tensão em três classes e exporta o modelo para o formato que roda em microcontrolador (ESP32-S3).
 
-### Por que esse tema é relevante?
+| Classe | Nome | Definição usada neste trabalho |
+|:--:|---|---|
+| 0 | Normal | Senoide de 60 Hz com ruído |
+| 1 | Surto leve | Impulso com pico de 1,5× a 3× a amplitude nominal |
+| 2 | Surto severo | Impulso com pico de 3× a 6× a amplitude nominal |
 
-O Brasil possui uma das maiores incidências de raios do mundo, com cerca de **77,8 milhões de descargas atmosféricas por ano** (ELAT/INPE). Surtos atmosféricos são uma das principais causas de falhas em equipamentos de redes de distribuição, causando danos a transformadores, religadores e capacitores. Um dispositivo embarcado capaz de **registrar e classificar automaticamente** a severidade do evento — sem necessidade de equipe de campo para diagnóstico — representa um avanço prático para concessionárias de energia.
+As faixas de amplitude são uma **definição operacional** deste trabalho, não limites universais. Por isso as classes leve e severo se sobrepõem nas bordas.
 
----
-
-##  Estrutura do repositório
-
-```
-TCC-TinyML-Surtos-Atmosfericos/
-│
-├── simulacao/
-│   ├── tcc_simulacao_v2.py              # Simula o circuito RLC e gera os 3 cenários
-│   └── tcc_augmentation_3classes.py     # Gera 1500 exemplos — 500 por classe
-│
-├── modelo/
-│   ├── tcc_pipeline_3classes_v2.py      # Treina e valida o classificador Random Forest
-│   └── normalizacao_3classes_v2.npz     # Parâmetros min/max para o firmware ESP32-S3
-│
-├── dados/
-│   └── dados_augmentados_3classes.npz   # Dataset completo — 3 classes balanceadas
-│
-├── resultados/
-│   └── resultados_v2.png                # Matriz de confusão e importância das features
-│
-└── README.md
-```
-
----
-
-##  As 3 classes do classificador
-
-| Classe | Nome | Descrição | Amplitude do pico |
-|:------:|------|-----------|:-----------------:|
-| **0** | Normal | Rede operando normalmente — senoidal 60 Hz com ruído | Nominal |
-| **1** | Surto Leve | Indução atmosférica indireta — raio caiu longe da linha | 1,5× a 3× |
-| **2** | Surto Severo | Descarga atmosférica direta ou muito próxima da linha | Acima de 3× |
-
----
-
-##  Pipeline do projeto
+## Estrutura
 
 ```
-Simulação RLC          Data Augmentation       Extração de Features
-(tcc_simulacao_v2)  →  (1500 exemplos)      →  (8 características)
-                                                        ↓
-                                              Treinamento Random Forest
-                                                        ↓
-                                              Validação K-Fold (k=5)
-                                                        ↓
-                                              Exportação TFLite INT8
-                                                        ↓
-                                              Firmware ESP32-S3 (model.h)
+simulacao/   tcc_simulacao_v2.py, tcc_augmentation_3classes.py
+modelo/      tcc_pipeline_3classes_v2.py, tcc_exportar_tflite_3classes.py,
+             tcc_validar_inferencia_int8.py, detector_surtos_int8.tflite, normalizacao_3classes_v2.npz
+firmware/    model.h   (modelo INT8 + constantes de normalização)
+dados/       dados_augmentados_3classes.npz
+resultados/  resultados_v2.png
 ```
 
----
+## Como os dados são gerados
 
-##  Base de dados
+- **Dataset (`tcc_augmentation_3classes.py`):** cada sinal = senoide de 60 Hz (amplitude e fase aleatórias) + ruído gaussiano + (nas classes de surto) um impulso de dupla exponencial em posição aleatória. Amplitudes em por unidade (1,0 = nominal). 1500 sinais, 500 por classe, janela de 200 µs a 10 MHz (2001 amostras).
+- **Impulso 1,2/50 µs:** `v(t) ∝ e^(−αt) − e^(−βt)` com α = 14286 s⁻¹ e β = 2,16×10⁶ s⁻¹. Esses valores foram **ajustados numericamente** até a onda atender às tolerâncias da IEC 60060-1. Medido: frente T1 = 1,36 µs (tolerância ±30%) e cauda T2 = 51,3 µs (±20%).
+- **Simulação RLC (`tcc_simulacao_v2.py`):** circuito RLC simplificado, usado para visualizar o impulso e verificar T1/T2. **Não alimenta o dataset.** Os valores de R, L e C são os parâmetros padrão do MATLAB/Simscape para uma linha de **735 kV**, e não representam uma linha de 13,8 kV.
 
-Os dados são **sintéticos**, gerados por equações físicas fundamentadas em normas e literatura técnica. Cada sinal é composto por três componentes somados:
+## Características extraídas (8)
 
-```
-Sinal = Senoidal 60 Hz  +  Ruído gaussiano  +  Impulso atmosférico (quando há surto)
-```
+RMS, pico, fator de crista, desvio padrão, proporção de energia acima de 100 kHz, centroide espectral, frequência dominante acima de 10 kHz e entropia espectral.
 
-### Parâmetros do impulso atmosférico — norma IEC 60060-1
+Observações: uma versão anterior usava a magnitude em 60 Hz, que era inválida (a resolução da FFT na janela de 200 µs é de 5 kHz por bin) e foi removida. As características de frequência contribuem pouco, porque o impulso tem componentes acima do que a taxa de 10 MHz resolve bem.
 
-O impulso padrão 1,2/50 µs é modelado pela dupla exponencial:
+## Resultados (dados sintéticos)
 
-```
-v(t) = Vp × (e^(-α·t) − e^(-β·t))
-```
+| Avaliação | Resultado |
+|---|---|
+| Random Forest, validação cruzada k = 5 | **97,8% ± 0,62%** (folds: 98,3; 97,3; 98,7; 97,0; 97,7) |
+| Random Forest, conjunto de teste (60/20/20) | 99,0% |
+| Rede neural float32, teste | 98,7% |
+| **Rede neural INT8 (TFLite), teste** | **98,3%** |
+| Tamanho do modelo INT8 | 3,47 KB (3552 bytes) |
 
-| Parâmetro | Valor | Significado |
-|-----------|-------|-------------|
-| α (alfa) | 14.286 s⁻¹ | Controla a cauda de 50 µs |
-| β (beta) | 2,16 × 10⁶ s⁻¹ | Controla a frente de 1,2 µs |
-| T1 (frente) | 1,36 µs | Dentro da tolerância IEC ±30% |
-| T2 (cauda) | 51,3 µs | Dentro da tolerância IEC ±20% |
+**Validação da inferência (`tcc_validar_inferencia_int8.py`):** os bytes do `model.h` são idênticos ao `.tflite`, e a inferência refeita como o C faria (normalização em float32, `roundf`, saturação em int8) concorda 100% com o interpretador TFLite. Truncar em vez de arredondar na quantização muda previsões, então o firmware deve usar `roundf()`.
 
-> Valores baseados em **Heidler (1985)** e validados conforme **IEC 60060-1**.
+## Limitações
 
-### Parâmetros do circuito RLC equivalente simplificado
+- Dados sintéticos gerados pelo mesmo modelo usado para definir as classes: a acurácia mede a separação dentro desse modelo, não o desempenho em redes reais.
+- O impulso 1,2/50 µs é um padrão de ensaio e não cobre a variedade de raios reais.
+- A simulação usa 10 MHz. O ADC do ESP32-S3 é bem mais lento (cerca de 100 mil amostras/s), então as características de 100 kHz e 10 kHz precisariam ser redefinidas para aquisição real.
+- A validação confirma o modelo e a aritmética de quantização. Não valida a extração de características em C, o ADC nem o tempo de inferência no chip.
 
-| Parâmetro | Valor | Referência |
-|-----------|-------|------------|
-| Tensão nominal | 13,8 kV / 60 Hz | PRODIST ANEEL |
-| Comprimento da linha | 10 km | Alimentador urbano típico |
-| Resistência série (R) | 0,1273 Ω | Stevenson (2006) |
-| Indutância série (L) | 9,337 mH | Stevenson (2006) |
-| Capacitância shunt (C) | 127,4 nF | Stevenson (2006) |
+## Como executar
 
----
+Use o notebook `TCC_Surtos_Notebook_Limpo.ipynb` no Google Colab (Executar tudo). Ordem dos scripts: simulação → augmentation → pipeline → exportação TFLite → validação.
 
-##  Características extraídas (features)
+## Próximos passos
 
-Cada sinal de 2001 amostras é resumido em **8 números** que descrevem seu comportamento nos domínios do tempo e da frequência:
+| Etapa | Status |
+|---|---|
+| Dataset, pipeline, K-Fold | Concluído |
+| Exportação TFLite INT8 e `model.h` | Concluído |
+| Validação da inferência em Python | Concluído |
+| Firmware ESP32-S3 (C++) | Pendente |
+| Validação em hardware e com sinais reais | Trabalho futuro |
 
-| # | Feature | Domínio | O que mede |
-|---|---------|---------|------------|
-| 1 | RMS | Tempo | Energia média do sinal |
-| 2 | Pico | Tempo | Valor absoluto máximo |
-| 3 | Fator de Crista | Tempo | Razão Pico/RMS — explode em surtos |
-| 4 | Desvio Padrão | Tempo | Dispersão dos valores |
-| 5 | Prop_HF_100kHz | Frequência | Fração da energia acima de 100 kHz |
-| 6 | Centroide Espectral | Frequência | Frequência média ponderada pela energia |
-| 7 | Freq_Dom_10kHz | Frequência | Frequência dominante acima de 10 kHz |
-| 8 | Entropia Espectral | Frequência | Dispersão do espectro |
+## Referências
 
-> **Nota técnica:** a feature `Mag_60Hz` foi removida por ser inválida para a janela de 200 µs utilizada — a resolução da FFT de 5 kHz/bin impede a identificação da componente de 60 Hz. Foi substituída pelo Centroide Espectral, matematicamente adequado para esta configuração.
-
----
-
-##  Resultados
-
-### Relatório de classificação
-
-| Classe | Precisão | Recall | F1-Score |
-|--------|:--------:|:------:|:--------:|
-| Normal | 1,00 | 1,00 | 1,00 |
-| Surto Leve | 0,97 | 0,96 | 0,96 |
-| Surto Severo | 0,96 | 0,97 | 0,97 |
-| **Média** | **0,98** | **0,98** | **0,98** |
-
-### Validação cruzada K-Fold (k=5)
-
-| Fold | Acurácia |
-|:----:|:--------:|
-| 1 | 98,3% |
-| 2 | 97,3% |
-| 3 | 98,7% |
-| 4 | 97,0% |
-| 5 | 97,7% |
-| **Média** | **97,8% ± 0,62%** |
-
-> A baixa variância entre os folds confirma que o modelo é **consistente** e não depende de um split específico para apresentar bom desempenho.
-
-### Importância das features
-
-| Feature | Importância |
-|---------|:-----------:|
-| Desvio Padrão | 37,7% |
-| Pico | 24,0% |
-| Fator de Crista | 16,0% |
-| RMS | 9,1% |
-| Prop_HF_100kHz | 5,9% |
-| Entropia | 3,1% |
-| Centroide | 2,7% |
-| Freq_Dom_10kHz | 1,5% |
-
----
-
-##  Como executar
-
-### Pré-requisitos
-- Google Colab ou Python 3.10+
-- Bibliotecas: `numpy`, `scipy`, `scikit-learn`, `matplotlib`, `tensorflow`
-
-### Ordem de execução
-
-```bash
-# 1. Gera os sinais simulados e exporta dados_simulacao_v2.npz
-python simulacao/tcc_simulacao_v2.py
-
-# 2. Gera o dataset de 1500 exemplos e exporta dados_augmentados_3classes.npz
-python simulacao/tcc_augmentation_3classes.py
-
-# 3. Treina o classificador, valida e salva o modelo
-python modelo/tcc_pipeline_3classes_v2.py
-```
-
----
-
-##  Tecnologias utilizadas
-
-| Tecnologia | Uso |
-|------------|-----|
-| Python 3.10+ | Linguagem principal |
-| NumPy / SciPy | Simulação e processamento de sinais |
-| Scikit-Learn | Random Forest e validação |
-| TensorFlow Lite | Exportação do modelo para microcontrolador |
-| ESP32-S3 | Microcontrolador alvo (TinyML) |
-| Google Colab | Ambiente de desenvolvimento |
-
----
-
-##  Referências técnicas
-
-- **IEC 60060-1** — High-voltage test techniques: General definitions and test requirements
-- **IEC 60060-2** — High-voltage test techniques: Measuring systems
-- **ANEEL — PRODIST Módulo 2 e 8** — Procedimentos de Distribuição de Energia Elétrica
-- **HEIDLER, F.** (1985). Travelling current source model for LEMP calculation. *6th Int. Zurich Symp. on EMC*
-- **STEVENSON, W. D.** (2006). *Elementos de Análise de Sistemas de Potência*. McGraw-Hill
-- **WARDEN, P.; SITUNAYAKE, D.** (2020). *TinyML*. O'Reilly Media
-- **BHATT, U. et al.** (2016). Power quality disturbance classification. *IEEE Trans. Power Delivery*
-- **ELAT/INPE** — Grupo de Eletricidade Atmosférica, Instituto Nacional de Pesquisas Espaciais
-
----
-
-##  Autor
-
-**João Paulo Guerra**  
-Curso de Engenharia — TCC 2026  
-Orientador: Prof(a). João Ferreira
-
----
-
-##  Observações importantes
-
-- Os dados utilizados são **sintéticos**, gerados por equações físicas fundamentadas em normas técnicas internacionais. Não representam medições reais de campo em redes elétricas.
-- Os resultados de 98% de acurácia foram obtidos em dados sintéticos de teste. O desempenho em sinais reais de campo pode diferir e constitui trabalho futuro.
-- O circuito utilizado é um **modelo RLC equivalente simplificado**, não uma linha PI completa — adequado para fins de geração de dados de treinamento.
+- INTERNATIONAL ELECTROTECHNICAL COMMISSION. IEC 60060-1: High-voltage test techniques, Part 1.
+- ELAT/INPE. Grupo de Eletricidade Atmosférica. http://www.inpe.br/webelat/
+- WARDEN, P.; SITUNAYAKE, D. TinyML. O'Reilly Media.
+- ESPRESSIF SYSTEMS. ESP32-S3 Series Datasheet.
+- MATHWORKS. PI Section Line (parâmetros padrão da linha de 735 kV). https://www.mathworks.com/help/sps/powersys/ref/pisectionline.html
