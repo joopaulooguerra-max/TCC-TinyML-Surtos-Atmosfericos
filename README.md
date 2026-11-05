@@ -2,7 +2,7 @@
 
 **Tema:** Sistema Embarcado Baseado em TinyML para Classificação de Sinais de Surtos Atmosféricos em Redes de Distribuição Elétrica
 
-**Autor:** [SEU NOME] · **Orientador:** [NOME DO ORIENTADOR]
+**Autores:** Bruno Morais, Eytor Bezerra, João Paulo  · **Orientador:** João Ferreira
 
 > **Escopo:** estudo de viabilidade feito **inteiramente em simulação**. Os dados são sintéticos e não há validação com medições reais nem em hardware.
 
