@@ -22,10 +22,10 @@ As faixas de amplitude são uma **definição operacional** deste trabalho, não
 
 ```
 simulacao/   tcc_simulacao_v2.py, tcc_augmentation_3classes.py
-modelo/      tcc_pipeline_3classes_v2.py, tcc_exportar_tflite_3classes.py,
+modelos/     tcc_pipeline_3classes_v2.py, tcc_exportar_tflite_3classes.py,
              tcc_validar_inferencia_int8.py, detector_surtos_int8.tflite, normalizacao_3classes_v2.npz
 firmware/    model.h   (modelo INT8 + constantes de normalização)
-dados/       dados_augmentados_3classes.npz
+dados/       (gerado pelos scripts, não versionado)
 resultados/  resultados_v2.png
 ```
 

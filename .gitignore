@@ -23,3 +23,7 @@ modelos/*.keras
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Excecoes: evidencias pequenas do TCC
+!resultados/*.png
+!modelos/detector_surtos_int8.tflite
