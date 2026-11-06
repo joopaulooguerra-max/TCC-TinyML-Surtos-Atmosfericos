@@ -2,35 +2,45 @@
 
 ## Prioridade 1 — Compreender e validar a base atual
 
-- [ ] Executar todas as células do notebook do início ao fim e confirmar que os arquivos são gerados sem depender de artefatos antigos do Colab.
-- [ ] Documentar a topologia elétrica equivalente com um diagrama e equações coerentes.
-- [ ] Verificar unidades, parâmetros R/L/C e a interpretação da tensão de 13,8 kV.
-- [ ] Reproduzir a medição da frente e da cauda do impulso; registrar o método de cálculo e as referências usadas.
-- [ ] Confirmar, no código, se os exemplos de treinamento usam as formas de onda simuladas ou se são gerados por funções independentes.
+- [x] Executar o notebook do início ao fim sem depender de arquivos antigos do Colab (notebook limpo).
+- [ ] Documentar a topologia elétrica equivalente com diagrama e equações.
+- [x] Verificar a origem dos parâmetros R/L/C: são os padrão do MATLAB para 735 kV, não de 13,8 kV (ver D-007).
+- [ ] Decidir o destino do circuito RLC: remover do texto, trocar por parâmetros de 13,8 kV com fonte, ou acoplar ao dataset.
+- [x] Reproduzir a medição da frente e da cauda do impulso (T1 de 1,33 a 1,36 µs, T2 de 51,3 a 51,4 µs).
+- [x] Confirmar no código que o dataset não usa as formas de onda simuladas.
 
 ## Prioridade 2 — Melhorar os dados e a validação
 
-- [ ] Definir critérios operacionais e justificáveis para Normal, Surto Leve e Surto Severo.
-- [ ] Incluir variações justificadas de parâmetros, amplitude, fase, ruído e instante do evento.
-- [ ] Verificar a resolução em frequência e a validade das oito características atuais.
-- [ ] Criar um teste separado por cenário/configuração, não apenas por amostras aleatórias da mesma distribuição.
-- [ ] Registrar matriz de confusão, precisão, recall, F1-score e resultados por cenário.
+- [ ] Justificar os critérios de Normal, Surto Leve e Surto Severo (hoje são faixas de amplitude operacionais).
+- [ ] **Teste de robustez:** treinar com uma faixa de ruído, amplitude e posição do impulso e testar com faixas não vistas.
+- [x] Verificar a resolução em frequência e a validade das características (D-005).
+- [x] Registrar matriz de confusão, precisão, recall e F1 por classe.
+- [ ] Criar teste separado por cenário, não só por amostras aleatórias do mesmo gerador.
 
 ## Prioridade 3 — Comparar modelos
 
-- [ ] Estabelecer um baseline reproduzível de Random Forest.
-- [ ] Treinar e avaliar uma MLP, se continuar alinhada ao escopo do TCC.
-- [ ] Comparar desempenho, estabilidade, custo computacional e complexidade.
-- [ ] Salvar versões dos experimentos, parâmetros e sementes aleatórias.
+- [x] Baseline de Random Forest reproduzível (sementes fixas).
+- [x] Rede neural pequena avaliada (float32 98,7%, INT8 98,3%).
+- [x] Comparar desempenho e tamanho (RF 99,0% contra INT8 98,3% e 3,47 KB).
+- [ ] Salvar cada experimento em `experimentos/` com parâmetros e sementes.
 
 ## Prioridade 4 — Preparar TinyML
 
-- [ ] Definir o sinal que seria medido e a cadeia de sensor/condicionamento/isolamento de forma segura.
-- [ ] Medir tempo de inferência, memória e tamanho do modelo.
-- [ ] Avaliar exportação/quantização INT8 somente após selecionar um modelo estável.
-- [ ] Implementar e testar no ESP32-S3 com sinais de teste controlados e seguros.
-- [ ] Documentar limitações; não usar o protótipo como proteção elétrica operacional.
+- [x] Exportar para TFLite INT8 e gerar `firmware/model.h`.
+- [x] Verificar que o `model.h` equivale ao `.tflite` (100% de concordância).
+- [ ] Escrever o firmware do ESP32-S3 (normalizar, quantizar com `roundf()`, classificar).
+- [ ] Redefinir as características para a taxa real do ADC (cerca de 100 mil amostras por segundo).
+- [ ] Definir a cadeia de aquisição segura (sensor, condicionamento, isolamento).
+- [ ] Medir tempo de inferência e RAM no chip, se houver a placa.
+
+## Prioridade 5 — Texto do TCC
+
+- [x] Resumo, palavras-chave, introdução e objetivos atualizados.
+- [ ] Referencial teórico.
+- [ ] Materiais e métodos.
+- [ ] Resultados e discussão.
+- [ ] Conclusão e trabalhos futuros.
 
 ## Registro de progresso
 
-Atualize as caixas de seleção e registre datas, arquivos alterados e resultados em `experimentos/`. Não marque uma tarefa como concluída sem uma evidência reproduzível.
+Atualize as caixas e registre datas, arquivos e resultados em `experimentos/`. Só marque uma tarefa como concluída com evidência reproduzível.
