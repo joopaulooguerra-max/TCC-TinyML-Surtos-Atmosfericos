@@ -5,67 +5,61 @@
 - **Título de trabalho:** Sistema Embarcado Baseado em TinyML para Classificação de Surtos Atmosféricos em Redes de Distribuição Elétrica.
 - **Área:** Engenharia da Computação, sistemas embarcados, processamento de sinais e aprendizado de máquina.
 - **Plataforma embarcada pretendida:** ESP32-S3.
-- **Ambiente atual de desenvolvimento:** Python / Google Colab.
-- **Estado:** protótipo de simulação e classificação com dados sintéticos; validação física e embarcada ainda pendente.
+- **Ambiente de desenvolvimento:** Python / Google Colab.
+- **Estado:** classificação em simulação concluída (dados sintéticos), modelo exportado para TFLite INT8 e inferência validada em Python. Firmware, validação em hardware e com sinais reais pendentes.
 
 ## 2. Objetivo atual
 
-Investigar a viabilidade de classificar sinais sintéticos/simulados em três classes — operação normal, surto leve e surto severo — utilizando características no domínio do tempo e da frequência e algoritmos de aprendizado de máquina. Uma etapa futura prevista é avaliar modelos compactos para execução no ESP32-S3.
+Investigar, em simulação, a viabilidade de classificar sinais em três classes (operação normal, surto leve e surto severo) com características dos domínios do tempo e da frequência, usando um modelo pequeno o bastante para um microcontrolador.
 
-O objetivo deve ser descrito como **classificação em cenários simulados** enquanto não houver avaliação com sinais reais ou com uma referência independente validada. Evitar afirmar que o sistema já prevê surtos, protege uma rede elétrica ou está pronto para uso operacional.
+Descrever sempre como **classificação em cenários simulados**. Não afirmar que o sistema prevê surtos, protege uma rede ou está pronto para uso operacional.
 
-## 3. Pipeline existente
+## 3. Pipeline atual
 
-O notebook `notebooks/ClassificadorTCC.ipynb` contém três células de código principais:
+Notebook: `notebooks/TCC_Surtos_Notebook_Limpo.ipynb` (Executar tudo). Etapas:
 
-1. **Simulação:** modelo elétrico equivalente simplificado de uma linha de distribuição de 13,8 kV / 10 km, com passo temporal de 100 ns e janela de 200 µs. A saída registrada informa um impulso com frente de aproximadamente 1,33 µs e cauda de 51,40 µs, dentro das tolerâncias que o próprio notebook atribui à IEC 60060-1. Essa verificação deve ser reproduzida e revisada antes de fazer uma afirmação normativa definitiva.
-2. **Geração de exemplos:** 1.500 janelas sintéticas, com 500 exemplos por classe e 2.001 amostras por janela. As variações descritas incluem amplitude, fase, ruído, posição temporal do evento e amplitude do pico.
-3. **Classificação:** extração de oito características e treinamento de Random Forest, com divisão treino/teste e validação cruzada de cinco folds.
+1. **Simulação (`simulacao/tcc_simulacao_v2.py`):** circuito RLC série equivalente simplificado, passo de 100 ns, janela de 200 µs. Serve para visualizar o impulso e verificar T1/T2. **Não alimenta o dataset.**
+2. **Dataset (`simulacao/tcc_augmentation_3classes.py`):** 1500 sinais (500 por classe, 2001 amostras). Cada sinal é gerado por função própria: senoide de 60 Hz (amplitude e fase aleatórias) + ruído gaussiano + impulso de dupla exponencial em posição aleatória, em por unidade (1,0 = nominal).
+3. **Pipeline (`modelos/tcc_pipeline_3classes_v2.py`):** 8 características e Random Forest, com validação cruzada k = 5.
+4. **Exportação (`modelos/tcc_exportar_tflite_3classes.py`):** rede neural 8-16-8-3 com softmax, divisão 60/20/20, normalização calculada só no treino, TFLite INT8 e `firmware/model.h`.
+5. **Validação (`modelos/tcc_validar_inferencia_int8.py`):** compara `model.h` e inferência refeita como o C faria com o modelo `.tflite`.
 
-### Características usadas no notebook atual
+### Características (versão atual)
 
-- RMS;
-- valor de pico;
-- fator de crista;
-- energia;
-- magnitude próxima de 60 Hz;
-- energia de alta frequência;
-- frequência dominante;
-- entropia espectral.
+RMS, pico, fator de crista, desvio padrão, proporção de energia acima de 100 kHz, centroide espectral, frequência dominante acima de 10 kHz e entropia espectral. A magnitude em 60 Hz foi removida (inválida: a resolução da FFT é 5 kHz por bin) e a energia foi removida (redundante com o RMS).
 
-A definição exata de cada característica e os detalhes da extração devem ser confirmados diretamente no código antes de qualquer modificação.
+## 4. Resultados (dados sintéticos)
 
-## 4. Resultados preliminares do notebook
+| Avaliação | Resultado |
+|---|---|
+| Random Forest, validação cruzada k = 5 | 97,8% ± 0,62% |
+| Random Forest, teste do pipeline (80/20) | 98%, F1 de 1,00 / 0,96 / 0,97 por classe |
+| Random Forest, teste da exportação (60/20/20) | 99,0% |
+| Rede neural float32 / INT8 | 98,7% / 98,3% |
+| Tamanho do modelo INT8 | 3,47 KB |
+| `model.h` x `.tflite` | bytes idênticos, 100% de concordância na inferência |
 
-O resultado salvo no notebook apresenta:
+Estes números valem para a distribuição sintética usada. Não são evidência de desempenho em dados reais.
 
-- **Acurácia no conjunto de teste:** 98% (300 exemplos no teste, 100 por classe).
-- **F1-score por classe:** 1,00 para Normal; 0,97 para Surto Leve; 0,97 para Surto Severo.
-- **Validação cruzada de cinco folds:** média de 97,73%, desvio-padrão aproximado de 0,65 ponto percentual.
+## 5. Riscos e estado
 
-Esses resultados são preliminares e se referem à distribuição sintética usada no experimento. Eles não são evidência de desempenho em dados reais. A avaliação deve ser repetida após revisar a geração dos sinais, as características e a estratégia de divisão dos dados.
-
-## 5. Riscos técnicos identificados para revisão
-
-1. **Coerência entre simulação e dados:** verificar se os exemplos de treinamento derivam de forma rastreável das saídas da simulação elétrica ou se são gerados por funções artificiais independentes. O notebook precisa deixar explícita essa relação.
-2. **Modelo elétrico:** documentar o circuito equivalente e verificar a topologia, unidades, parâmetros e interpretação da capacitância. Não descrever o modelo simplificado como uma linha PI completa se não representar essa topologia.
-3. **Forma de onda de impulso:** reproduzir o cálculo de frente e cauda e registrar como os tempos são medidos. Não afirmar conformidade normativa sem evidência e referência adequadas.
-4. **Classes:** justificar os critérios usados para separar surto leve e severo. Os rótulos atuais são escolhas operacionais do experimento, não níveis universais para todas as redes.
-5. **Características espectrais:** verificar a resolução em frequência e se as características em torno de 60 Hz e de alta frequência correspondem ao que a janela temporal consegue resolver.
-6. **Validação:** separar cenários completos ou configurações de simulação entre treino e teste, para reduzir o risco de o teste conter exemplos quase derivados das mesmas condições do treino.
-7. **Aquisição embarcada:** especificar qual grandeza seria medida, o sensor/condicionamento, isolamento, taxa de amostragem, faixa dinâmica e segurança. O ADC do ESP32-S3 não deve ser ligado diretamente a média tensão.
-8. **TinyML:** a exportação para TFLite/INT8 e a execução no ESP32-S3 são etapas futuras; não registrar como concluídas sem artefatos e testes verificáveis.
+1. **Simulação x dados — resolvido (verificado no código).** O dataset não deriva da simulação RLC. Descrever assim no TCC.
+2. **Modelo elétrico — resolvido.** É RLC série simplificado, não uma linha PI. Os valores de R, L e C são os padrão do MATLAB/Simscape para uma linha de 735 kV e não representam 13,8 kV. Foram atribuídos por engano a Stevenson em versões anteriores (corrigido).
+3. **Impulso 1,2/50 µs — verificado.** `alfa` e `beta` foram ajustados numericamente. A medição dá T1 de 1,33 µs e T2 de 51,40 µs com passo de 100 ns (1,36 µs e 51,3 µs com passo de 1 ns), dentro das tolerâncias da IEC 60060-1 (±30% e ±20%). T2 foi medido a partir de t = 0, sem a origem virtual da norma.
+4. **Classes — aberto.** As faixas de amplitude (1,5 a 3× e 3 a 6×) são definição operacional deste trabalho. Elas se sobrepõem nas bordas, o que explica os erros entre leve e severo.
+5. **Características espectrais — resolvido.** Limiares ajustados para a janela de 200 µs. As características de frequência têm pouca importância.
+6. **Validação por cenário — aberto.** O teste atual usa amostras aleatórias do mesmo gerador. Falta um teste de robustez (ruído, amplitude e instante em faixas não vistas no treino).
+7. **Aquisição embarcada — aberto.** A simulação usa 10 MHz e o ADC do ESP32-S3 chega a cerca de 100 mil amostras por segundo. As características de 100 kHz e 10 kHz precisariam ser redefinidas. Média tensão nunca vai direto ao ADC.
+8. **TinyML — parcialmente concluído.** Exportação INT8 e validação em Python concluídas. Faltam firmware, tempo de inferência e memória medidos no chip.
 
 ## 6. Escopo e limitações
 
-O trabalho pode ser academicamente válido usando simulação, desde que a metodologia seja coerente, os pressupostos estejam descritos, os experimentos sejam reproduzíveis e as conclusões se limitem ao que foi testado. A ausência de dados reais deve ser registrada como limitação e oportunidade para trabalho futuro.
-
-O protótipo não é um equipamento de proteção elétrica validado e não deve ser conectado a uma rede real para atuação.
+O trabalho é válido em simulação se os pressupostos estiverem descritos e as conclusões se limitarem ao que foi testado. A falta de dados reais e de validação em hardware é limitação declarada e trabalho futuro. O protótipo não é um equipamento de proteção validado e não deve ser conectado a uma rede real.
 
 ## 7. Próxima prioridade
 
-Antes de otimizar métricas ou converter modelos para microcontrolador, revisar o vínculo entre a simulação elétrica e a geração de dados e validar as características do sinal. Em seguida, definir um protocolo de teste com cenários inteiros reservados e documentar cada execução.
+Escrever o firmware do ESP32-S3 (usando `roundf()` e saturação na quantização), rodar o teste de robustez dos dados e definir a cadeia de aquisição segura.
 
 ## 8. Como atualizar este arquivo
 
-Atualize este documento quando houver uma mudança importante de objetivo, metodologia, parâmetros, resultados ou limitações. Registre decisões com data em `DECISOES.md` e registre cada experimento em `experimentos/`.
+Atualize quando mudar objetivo, metodologia, parâmetros, resultados ou limitações. Registre decisões em `DECISOES.md` e experimentos em `experimentos/`.
