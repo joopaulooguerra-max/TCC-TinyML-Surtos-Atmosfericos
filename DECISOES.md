@@ -50,6 +50,24 @@
 - **Contexto:** truncar em vez de arredondar mudou 1 a 2 previsões em 300.
 - **Decisão:** o firmware usa `roundf()` e limita o valor entre -128 e 127.
 
+### D-010 — Reportar a robustez como média ± desvio em 10 sementes
+- **Data:** 2026-11-14
+- **Contexto:** uma única semente sugeriu que o modelo INT8 perdia mais sob ruído (93%). Em 16 sementes isso não se reproduziu.
+- **Decisão:** reportar todos os cenários de robustez como média ± desvio e mínimo a máximo em 10 sementes, e remover a afirmação anterior.
+- **Impactos:** `tcc_robustez_multisementes.py`, Resultados, Resumo, README.
+
+### D-011 — Manter as 8 características, declarando que as espectrais pouco contribuem
+- **Data:** 2026-11-16
+- **Contexto:** as 4 características de frequência somam 13,1% da importância na Random Forest.
+- **Teste:** validação cruzada k = 5: 8 características 97,8% ± 0,62; só tempo 97,7% ± 0,44; só frequência 83,4% ± 0,83. Energia do impulso puro acima de 100 kHz: 0,49%.
+- **Decisão:** manter as 8 (já exportadas e validadas) e declarar no texto que, nesta simulação, as espectrais não acrescentam desempenho às temporais.
+- **Impactos:** `tcc_ablacao_caracteristicas.py`, Resultados e Conclusão.
+
+### D-012 — Manter o β do impulso ajustado (2,16×10⁶ s⁻¹)
+- **Data:** 2026-11-16
+- **Contexto:** Perotoni et al. (2022) usam α = 14×10³ e β = 2,5×10⁶ (T1 = 1,19 µs). O β deste trabalho dá T1 = 1,36 µs, ainda dentro de ±30%.
+- **Decisão:** manter, e descrever a comparação em Materiais e Métodos. O cenário E de robustez já varia α e β de 0,6× a 1,4×. Refazer tudo só se o orientador pedir.
+
 ## Modelo para novas decisões
 
 ### D-XXX — Título curto

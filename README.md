@@ -2,7 +2,7 @@
 
 **Tema:** Sistema Embarcado Baseado em TinyML para Classificação de Sinais de Surtos Atmosféricos em Redes de Distribuição Elétrica
 
-**Autores:** Bruno Morais, Eytor Bezerra, João Paulo  · **Orientador:** João Ferreira
+**Autor:** [SEU NOME] · **Orientador:** [NOME DO ORIENTADOR]
 
 > **Escopo:** estudo de viabilidade feito **inteiramente em simulação**. Os dados são sintéticos e não há validação com medições reais nem em hardware.
 
@@ -23,10 +23,11 @@ As faixas de amplitude são uma **definição operacional** deste trabalho, não
 ```
 simulacao/   tcc_simulacao_v2.py, tcc_augmentation_3classes.py
 modelos/     tcc_pipeline_3classes_v2.py, tcc_exportar_tflite_3classes.py,
-             tcc_validar_inferencia_int8.py, detector_surtos_int8.tflite, normalizacao_3classes_v2.npz
+             tcc_validar_inferencia_int8.py, tcc_teste_robustez.py,
+             tcc_robustez_multisementes.py, tcc_ablacao_caracteristicas.py, detector_surtos_int8.tflite, normalizacao_3classes_v2.npz
 firmware/    model.h   (modelo INT8 + constantes de normalização)
-dados/       (gerado pelos scripts, não versionado)
-resultados/  resultados_v2.png
+dados/       dados_augmentados_3classes.npz
+resultados/  resultados_v2.png, robustez_multisementes.png/.md
 ```
 
 ## Como os dados são gerados
@@ -39,7 +40,7 @@ resultados/  resultados_v2.png
 
 RMS, pico, fator de crista, desvio padrão, proporção de energia acima de 100 kHz, centroide espectral, frequência dominante acima de 10 kHz e entropia espectral.
 
-Observações: uma versão anterior usava a magnitude em 60 Hz, que era inválida (a resolução da FFT na janela de 200 µs é de 5 kHz por bin) e foi removida. As características de frequência contribuem pouco, porque o impulso tem componentes acima do que a taxa de 10 MHz resolve bem.
+Observações: uma versão anterior usava a magnitude em 60 Hz, que era inválida (a resolução da FFT na janela de 200 µs é de 5 kHz por bin) e foi removida. As características de frequência contribuem pouco: só **0,49%** da energia do impulso puro está acima de 100 kHz (a cauda de 50 µs concentra a energia em baixas frequências). Teste de ablação (`tcc_ablacao_caracteristicas.py`, validação cruzada k = 5): 8 características **97,8% ± 0,62**, só as 4 de tempo **97,7% ± 0,44**, só as 4 de frequência **83,4% ± 0,83**. Nesta simulação a separação das classes vem da amplitude.
 
 ## Resultados (dados sintéticos)
 
@@ -53,11 +54,27 @@ Observações: uma versão anterior usava a magnitude em 60 Hz, que era inválid
 
 **Validação da inferência (`tcc_validar_inferencia_int8.py`):** os bytes do `model.h` são idênticos ao `.tflite`, e a inferência refeita como o C faria (normalização em float32, `roundf`, saturação em int8) concorda 100% com o interpretador TFLite. Truncar em vez de arredondar na quantização muda previsões, então o firmware deve usar `roundf()`.
 
+## Robustez (cenários fora do treino)
+
+Treino fixo; teste em cenários diferentes, **média ± desvio em 10 sementes** (`tcc_robustez_multisementes.py`):
+
+| Cenário | Random Forest | Rede INT8 |
+|---|---|---|
+| A Controle | 98,0 ± 0,1 | 97,9 ± 0,4 |
+| B Ruído maior | 96,9 ± 1,1 | 98,0 ± 0,3 |
+| C Amplitude fora da faixa | 97,1 ± 0,3 | 97,7 ± 0,2 |
+| D Impulso nas bordas da janela | 94,8 ± 0,4 | 94,4 ± 1,4 |
+| E Forma do impulso diferente | 96,4 ± 0,3 | 96,9 ± 0,2 |
+| F Harmônicos | 98,6 ± 0,2 | 98,4 ± 0,4 |
+| G B+C+D+E | 96,6 ± 0,5 | 95,9 ± 0,8 |
+
+Os erros ficam entre leve e severo; a classe normal é sempre 100%. O pior cenário é D (causa não investigada). Os testes usam a mesma família de geradores do treino, então **não** medem desempenho em dados reais.
+
 ## Limitações
 
 - Dados sintéticos gerados pelo mesmo modelo usado para definir as classes: a acurácia mede a separação dentro desse modelo, não o desempenho em redes reais.
 - O impulso 1,2/50 µs é um padrão de ensaio e não cobre a variedade de raios reais.
-- A simulação usa 10 MHz. O ADC do ESP32-S3 é bem mais lento (cerca de 100 mil amostras/s), então as características de 100 kHz e 10 kHz precisariam ser redefinidas para aquisição real.
+- A simulação usa 10 MHz. O ADC do ESP32-S3 é bem mais lento (limite padrão do driver contínuo do ESP-IDF: 83333 amostras/s; **confirmar na documentação oficial**), então as características de 100 kHz e 10 kHz precisariam ser redefinidas para aquisição real.
 - A validação confirma o modelo e a aritmética de quantização. Não valida a extração de características em C, o ADC nem o tempo de inferência no chip.
 
 ## Como executar
@@ -71,6 +88,7 @@ Use o notebook `TCC_Surtos_Notebook_Limpo.ipynb` no Google Colab (Executar tudo)
 | Dataset, pipeline, K-Fold | Concluído |
 | Exportação TFLite INT8 e `model.h` | Concluído |
 | Validação da inferência em Python | Concluído |
+| Teste de robustez (10 sementes) e ablação de características | Concluído |
 | Firmware ESP32-S3 (C++) | Pendente |
 | Validação em hardware e com sinais reais | Trabalho futuro |
 

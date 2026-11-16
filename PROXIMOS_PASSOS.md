@@ -12,10 +12,10 @@
 ## Prioridade 2 — Melhorar os dados e a validação
 
 - [ ] Justificar os critérios de Normal, Surto Leve e Surto Severo (hoje são faixas de amplitude operacionais).
-- [ ] **Teste de robustez:** treinar com uma faixa de ruído, amplitude e posição do impulso e testar com faixas não vistas.
+- [x] **Teste de robustez** com 7 cenários e 10 sementes (D-010).
 - [x] Verificar a resolução em frequência e a validade das características (D-005).
 - [x] Registrar matriz de confusão, precisão, recall e F1 por classe.
-- [ ] Criar teste separado por cenário, não só por amostras aleatórias do mesmo gerador.
+- [x] Teste separado por cenário (robustez). Limitação: mesma família de geradores.
 
 ## Prioridade 3 — Comparar modelos
 
@@ -29,17 +29,20 @@
 - [x] Exportar para TFLite INT8 e gerar `firmware/model.h`.
 - [x] Verificar que o `model.h` equivale ao `.tflite` (100% de concordância).
 - [ ] Escrever o firmware do ESP32-S3 (normalizar, quantizar com `roundf()`, classificar).
-- [ ] Redefinir as características para a taxa real do ADC (cerca de 100 mil amostras por segundo).
+- [ ] Redefinir as características para a taxa real do ADC (limite padrão de 83333 amostras por segundo no driver contínuo; confirmar na documentação oficial).
 - [ ] Definir a cadeia de aquisição segura (sensor, condicionamento, isolamento).
 - [ ] Medir tempo de inferência e RAM no chip, se houver a placa.
 
 ## Prioridade 5 — Texto do TCC
 
 - [x] Resumo, palavras-chave, introdução e objetivos atualizados.
-- [ ] Referencial teórico.
-- [ ] Materiais e métodos.
-- [ ] Resultados e discussão.
-- [ ] Conclusão e trabalhos futuros.
+- [ ] Referencial teórico (depende da leitura das fontes).
+- [ ] Investigar por que o cenário D (impulso nas bordas da janela) é o pior (opcional).
+- [ ] Abstract e keywords em inglês.
+- [ ] Slides, roteiro de fala e perguntas da banca.
+- [x] Materiais e métodos.
+- [x] Resultados e discussão.
+- [x] Conclusão e trabalhos futuros.
 
 ## Registro de progresso
 
