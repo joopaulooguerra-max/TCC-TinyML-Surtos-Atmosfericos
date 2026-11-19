@@ -26,14 +26,14 @@ modelos/     tcc_pipeline_3classes_v2.py, tcc_exportar_tflite_3classes.py,
              tcc_validar_inferencia_int8.py, tcc_teste_robustez.py,
              tcc_robustez_multisementes.py, tcc_ablacao_caracteristicas.py, detector_surtos_int8.tflite, normalizacao_3classes_v2.npz
 firmware/    model.h   (modelo INT8 + constantes de normalização)
-dados/       dados_augmentados_3classes.npz
+dados/       (sem arquivos: os dados são gerados pelo notebook, com semente fixa)
 resultados/  resultados_v2.png, robustez_multisementes.png/.md
 ```
 
 ## Como os dados são gerados
 
 - **Dataset (`tcc_augmentation_3classes.py`):** cada sinal = senoide de 60 Hz (amplitude e fase aleatórias) + ruído gaussiano + (nas classes de surto) um impulso de dupla exponencial em posição aleatória. Amplitudes em por unidade (1,0 = nominal). 1500 sinais, 500 por classe, janela de 200 µs a 10 MHz (2001 amostras).
-- **Impulso 1,2/50 µs:** `v(t) ∝ e^(−αt) − e^(−βt)` com α = 14286 s⁻¹ e β = 2,16×10⁶ s⁻¹. Esses valores foram **ajustados numericamente** até a onda atender às tolerâncias da ABNT NBR IEC 60060-1. Medido: frente T1 = 1,36 µs (tolerância ±30%) e cauda T2 = 51,3 µs (±20%).
+- **Impulso 1,2/50 µs:** `v(t) ∝ e^(−αt) − e^(−βt)` com α = 14286 s⁻¹ e β = 2,16×10⁶ s⁻¹. Esses valores foram **ajustados numericamente** até a onda atender às tolerâncias da ABNT NBR IEC 60060-1. Medido: frente T1 = 1,36 µs (tolerância ±30%) e cauda T2 = 51,57 µs (±20%; contado a partir da origem virtual, como na norma).
 - **Simulação RLC (`tcc_simulacao_v2.py`):** circuito RLC simplificado, usado para visualizar o impulso e verificar T1/T2. **Não alimenta o dataset.** Os valores de R, L e C são os parâmetros padrão do MATLAB/Simscape para uma linha de **735 kV**, e não representam uma linha de 13,8 kV.
 
 ## Características extraídas (8)
