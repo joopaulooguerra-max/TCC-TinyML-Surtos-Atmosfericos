@@ -36,7 +36,7 @@
 ## Prioridade 5 — Texto do TCC
 
 - [x] Resumo, palavras-chave, introdução e objetivos atualizados.
-- [ ] Referencial teórico (depende da leitura das fontes).
+- [x] Referencial teórico (Seção 2) escrito a partir das fontes lidas.
 - [ ] Investigar por que o cenário D (impulso nas bordas da janela) é o pior (opcional).
 - [ ] Abstract e keywords em inglês.
 - [ ] Slides, roteiro de fala e perguntas da banca.
