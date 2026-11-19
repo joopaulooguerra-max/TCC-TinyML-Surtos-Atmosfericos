@@ -45,11 +45,11 @@ Estes números valem para a distribuição sintética usada. Não são evidênci
 
 1. **Simulação x dados — resolvido (verificado no código).** O dataset não deriva da simulação RLC. Descrever assim no TCC.
 2. **Modelo elétrico — resolvido.** É RLC série simplificado, não uma linha PI. Os valores de R, L e C são os padrão do MATLAB/Simscape para uma linha de 735 kV e não representam 13,8 kV. Foram atribuídos por engano a Stevenson em versões anteriores (corrigido).
-3. **Impulso 1,2/50 µs — verificado.** `alfa` e `beta` foram ajustados numericamente. A medição dá T1 de 1,33 µs e T2 de 51,40 µs com passo de 100 ns (1,36 µs e 51,3 µs com passo de 1 ns), dentro das tolerâncias da IEC 60060-1 (±30% e ±20%). T2 foi medido a partir de t = 0, sem a origem virtual da norma.
+3. **Impulso 1,2/50 µs — verificado.** `alfa` e `beta` foram ajustados numericamente. A medição dá T1 de 1,33 µs e T2 de 51,60 µs com passo de 100 ns (1,36 µs e 51,57 µs com passo de 1 ns), com T2 contado a partir da origem virtual, como na ABNT NBR IEC 60060-1, dentro das tolerâncias da IEC 60060-1 (±30% e ±20%). T2 foi medido a partir de t = 0, sem a origem virtual da norma.
 4. **Classes — aberto.** As faixas de amplitude (1,5 a 3× e 3 a 6×) são definição operacional deste trabalho. Elas se sobrepõem nas bordas, o que explica os erros entre leve e severo.
 5. **Características espectrais — resolvido.** Limiares ajustados para a janela de 200 µs. As de frequência têm pouca importância: só as 4 de tempo dão 97,7% e as 8 dão 97,8% (D-011).
 6. **Validação por cenário — resolvido em parte.** Teste de robustez com 7 cenários e 10 sementes: RF 94,8 a 98,6% e INT8 94,4 a 98,4%. Pior cenário: impulso nas bordas da janela (causa não investigada). Os cenários usam a mesma família de geradores do treino.
-7. **Aquisição embarcada — aberto.** A simulação usa 10 MHz e o driver contínuo do ADC do ESP32-S3 tem limite padrão de 83333 amostras por segundo (a confirmar na documentação oficial). As características de 100 kHz e 10 kHz precisariam ser redefinidas. Média tensão nunca vai direto ao ADC.
+7. **Aquisição embarcada — aberto.** A simulação usa 10 MHz e a documentação do ESP-IDF v4.4.6 informa, para o ADC contínuo do ESP32-S3, taxa de amostragem de 611 Hz a 83333 Hz. As características de 100 kHz e 10 kHz precisariam ser redefinidas. Média tensão nunca vai direto ao ADC.
 8. **TinyML — parcialmente concluído.** Exportação INT8 e validação em Python concluídas. Faltam firmware, tempo de inferência e memória medidos no chip.
 
 ## 6. Escopo e limitações
