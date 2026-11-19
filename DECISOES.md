@@ -28,7 +28,7 @@
 - **Decisão:** trocar por centroide espectral e desvio padrão, e ajustar os limiares de frequência para 100 kHz e 10 kHz.
 - **Impactos:** `tcc_pipeline_3classes_v2.py` e o capítulo de metodologia.
 
-### D-006 — Ajustar o impulso numericamente às tolerâncias da IEC 60060-1
+### D-006 — Ajustar o impulso numericamente às tolerâncias da ABNT NBR IEC 60060-1
 - **Data:** 2026-11-05
 - **Contexto:** `alfa` = 1/50 µs e `beta` = 1/1,2 µs davam frente de cerca de 2,7 µs, fora da tolerância.
 - **Decisão:** usar `alfa` = 14286 s⁻¹ e `beta` = 2,16×10⁶ s⁻¹, achados por ajuste numérico, e não atribuí-los a uma publicação.
