@@ -6,7 +6,7 @@
 - [ ] Documentar a topologia elétrica equivalente com diagrama e equações.
 - [x] Verificar a origem dos parâmetros R/L/C: são os padrão do MATLAB para 735 kV, não de 13,8 kV (ver D-007).
 - [ ] Decidir o destino do circuito RLC: remover do texto, trocar por parâmetros de 13,8 kV com fonte, ou acoplar ao dataset.
-- [x] Reproduzir a medição da frente e da cauda do impulso (T1 de 1,33 a 1,36 µs, T2 de 51,3 a 51,4 µs).
+- [x] Reproduzir a medição da frente e da cauda do impulso (T1 de 1,33 a 1,36 µs, T2 de 51,57 a 51,60 µs, contado a partir da origem virtual).
 - [x] Confirmar no código que o dataset não usa as formas de onda simuladas.
 
 ## Prioridade 2 — Melhorar os dados e a validação
@@ -29,7 +29,7 @@
 - [x] Exportar para TFLite INT8 e gerar `firmware/model.h`.
 - [x] Verificar que o `model.h` equivale ao `.tflite` (100% de concordância).
 - [ ] Escrever o firmware do ESP32-S3 (normalizar, quantizar com `roundf()`, classificar).
-- [ ] Redefinir as características para a taxa real do ADC (limite padrão de 83333 amostras por segundo no driver contínuo; confirmar na documentação oficial).
+- [ ] Redefinir as características para a taxa real do ADC (ESP-IDF v4.4.6: 611 Hz a 83333 Hz no ADC contínuo).
 - [ ] Definir a cadeia de aquisição segura (sensor, condicionamento, isolamento).
 - [ ] Medir tempo de inferência e RAM no chip, se houver a placa.
 
