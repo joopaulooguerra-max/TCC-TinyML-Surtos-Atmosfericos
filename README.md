@@ -2,7 +2,7 @@
 
 **Tema:** Sistema Embarcado Baseado em TinyML para Classificação de Sinais de Surtos Atmosféricos em Redes de Distribuição Elétrica
 
-**Autor:** [SEU NOME] · **Orientador:** [NOME DO ORIENTADOR]
+**Autores:** João Paulo Guerra, Bruno Morais e Eytor Bezerra · **Orientador:** João Ferreira
 
 > **Escopo:** estudo de viabilidade feito **inteiramente em simulação**. Os dados são sintéticos e não há validação com medições reais nem em hardware.
 
@@ -33,7 +33,7 @@ resultados/  resultados_v2.png, robustez_multisementes.png/.md
 ## Como os dados são gerados
 
 - **Dataset (`tcc_augmentation_3classes.py`):** cada sinal = senoide de 60 Hz (amplitude e fase aleatórias) + ruído gaussiano + (nas classes de surto) um impulso de dupla exponencial em posição aleatória. Amplitudes em por unidade (1,0 = nominal). 1500 sinais, 500 por classe, janela de 200 µs a 10 MHz (2001 amostras).
-- **Impulso 1,2/50 µs:** `v(t) ∝ e^(−αt) − e^(−βt)` com α = 14286 s⁻¹ e β = 2,16×10⁶ s⁻¹. Esses valores foram **ajustados numericamente** até a onda atender às tolerâncias da IEC 60060-1. Medido: frente T1 = 1,36 µs (tolerância ±30%) e cauda T2 = 51,3 µs (±20%).
+- **Impulso 1,2/50 µs:** `v(t) ∝ e^(−αt) − e^(−βt)` com α = 14286 s⁻¹ e β = 2,16×10⁶ s⁻¹. Esses valores foram **ajustados numericamente** até a onda atender às tolerâncias da ABNT NBR IEC 60060-1. Medido: frente T1 = 1,36 µs (tolerância ±30%) e cauda T2 = 51,3 µs (±20%).
 - **Simulação RLC (`tcc_simulacao_v2.py`):** circuito RLC simplificado, usado para visualizar o impulso e verificar T1/T2. **Não alimenta o dataset.** Os valores de R, L e C são os parâmetros padrão do MATLAB/Simscape para uma linha de **735 kV**, e não representam uma linha de 13,8 kV.
 
 ## Características extraídas (8)
@@ -74,7 +74,7 @@ Os erros ficam entre leve e severo; a classe normal é sempre 100%. O pior cená
 
 - Dados sintéticos gerados pelo mesmo modelo usado para definir as classes: a acurácia mede a separação dentro desse modelo, não o desempenho em redes reais.
 - O impulso 1,2/50 µs é um padrão de ensaio e não cobre a variedade de raios reais.
-- A simulação usa 10 MHz. O ADC do ESP32-S3 é bem mais lento (limite padrão do driver contínuo do ESP-IDF: 83333 amostras/s; **confirmar na documentação oficial**), então as características de 100 kHz e 10 kHz precisariam ser redefinidas para aquisição real.
+- A simulação usa 10 MHz. O ADC do ESP32-S3 é bem mais lento (a documentação do ESP-IDF v4.4.6 informa, para o ADC contínuo, taxa de amostragem de 611 Hz a 83333 Hz), então as características de 100 kHz e 10 kHz precisariam ser redefinidas para aquisição real.
 - A validação confirma o modelo e a aritmética de quantização. Não valida a extração de características em C, o ADC nem o tempo de inferência no chip.
 
 ## Como executar
@@ -94,7 +94,7 @@ Use o notebook `TCC_Surtos_Notebook_Limpo.ipynb` no Google Colab (Executar tudo)
 
 ## Referências
 
-- INTERNATIONAL ELECTROTECHNICAL COMMISSION. IEC 60060-1: High-voltage test techniques, Part 1.
+- ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR IEC 60060-1: técnicas de ensaios elétricos de alta tensão – parte 1. Rio de Janeiro: ABNT, 2013.
 - ELAT/INPE. Grupo de Eletricidade Atmosférica. http://www.inpe.br/webelat/
 - WARDEN, P.; SITUNAYAKE, D. TinyML. O'Reilly Media.
 - ESPRESSIF SYSTEMS. ESP32-S3 Series Datasheet.
